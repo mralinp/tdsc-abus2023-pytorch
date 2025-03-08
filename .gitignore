@@ -33,3 +33,5 @@ ENV/
 
 # Dataset
 data/
+
+.coverage

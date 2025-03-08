@@ -1,7 +1,7 @@
 # TDSC-ABUS2023 PyTorch Dataset
 
-[![PyPI version](https://img.shields.io/pypi/v/tdsc-abus2023-pytorch)](https://pypi.org/project/tdsc-abus2023-pytorch/)  
-[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)  
+[![PyPI version](https://img.shields.io/pypi/v/tdsc-abus2023-pytorch)](https://pypi.org/project/tdsc-abus2023-pytorch/)
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Build Status](https://img.shields.io/github/actions/workflow/status/mralinp/tdsc-abus2023-pytorch/python-publish.yml?branch=main)](https://github.com/mralinp/tdsc-abus2023-pytorch/actions)
 
 A PyTorch-compatible dataset package containing volumetric data from the **TDSC-ABUS2023** collection (**Tumor Detection, Segmentation, and Classification Challenge on Automated 3D Breast Ultrasound**).

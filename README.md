@@ -39,7 +39,7 @@ pip install tdsc-abus2023-pytorch
 ## Usage
 
 ```python
-from tdsc-abus2023-pytorch import TDSC, DataSplits
+from tdsc_abus2023_pytorch import TDSC, TDSCTumors, DataSplits
 
 # Initialize dataset with automatic download
 dataset = TDSC(
@@ -49,22 +49,21 @@ dataset = TDSC(
 )
 
 # Access a sample
-volume, mask, label = dataset[0]
+volume, mask, label, bbx = dataset[0]
 ```
 
 ## Data Structure
 ```
 data/
-└── tdsc/
-    ├── Train/
-    │   ├── DATA/
-    │   └── MASK/
-    ├── Validation/
-    │   ├── DATA/
-    │   └── MASK/
-    └── Test/
-        ├── DATA/
-        └── MASK/
+  ├── Train/
+  │   ├── DATA/
+  │   └── MASK/
+  ├── Validation/
+  │   ├── DATA/
+  │   └── MASK/
+  └── Test/
+      ├── DATA/
+      └── MASK/
 ```
 
 ## Citation
@@ -84,11 +83,5 @@ If you use this dataset in your research, please cite:
 ```
 
 ## Contributing
-
-### Build from source
-
-```bash
-python setup.py sdist bdist_wheel
-```
 
 Contributions are welcome! Please feel free to submit a Pull Request.

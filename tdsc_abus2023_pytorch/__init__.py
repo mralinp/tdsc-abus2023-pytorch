@@ -1,7 +1,4 @@
-import os
 from enum import Enum
-from tdsc_tumors import TDSCTumors
-from tdsc import TDSC
 
 class DataSplits(str, Enum):
     TRAIN = "Train"
@@ -10,5 +7,8 @@ class DataSplits(str, Enum):
 
     def __str__(self):
         return self.value
+
+# Remove or fix the problematic import
+# from tdsc_tumors import TDSCTumors  # This was causing the error
 
 __version__ = "0.1.0"

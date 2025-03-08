@@ -3,14 +3,13 @@ from setuptools import setup, find_packages
 setup(
     name="tdsc-abus2023-pytorch",
     version="0.1.0",
-    packages=find_packages(exclude=["tests"]),
+    packages=find_packages(),
     install_requires=[
         "pandas",
         "pynrrd",
         "torch",
         "requests",
         "gdown",
-        "numpy",
     ],
     author="Ali Naderi Parizi",
     author_email="me@alinaderiparizi.com",

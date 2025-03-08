@@ -27,7 +27,7 @@ class DatasetDownloader:
             base_path = os.path.join(os.getcwd(), "data")
 
         file_ids = cls.get_file_ids()
-        split_data = file_ids["tdsc"][split]
+        split_data = file_ids[split]
 
         for data_type, info in split_data.items():
             output_path = os.path.join(base_path, info["path"])

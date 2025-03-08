@@ -73,7 +73,7 @@ class TDSCTumors(TDSC):
             cropped to the tumor region
         """
         # Get base data from parent class
-        volume, mask, label = super().__getitem__(index)
+        volume, mask, label, _ = super().__getitem__(index)
         
         # Get bounding box data
         bbox_data = self.bbx_metadata.iloc[index]

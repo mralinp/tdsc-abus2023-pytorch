@@ -1,13 +1,32 @@
 # TDSC-ABUS2023 PyTorch Dataset
 
-A PyTorch-compatible dataset package containing volumetric data from the TDSC-ABUS2023 collection.
+A PyTorch-compatible dataset package containing volumetric data from the TDSC-ABUS2023 collection (Tumor Detection, Segmentation and Classification Challenge on Automated 3D Breast Ultrasound).
 
-## Description
+## Dataset Description
 
-This package provides easy access to the TDSC-ABUS2023 dataset, which consists of volumetric medical imaging data. The dataset is split into:
-- 100 training volumes
-- 30 validation volumes
-- 70 test volumes
+The dataset contains 200 3D volumes with refined tumor labels, collected using an Automated 3D Breast Ultrasound (ABUS) system (Invenia ABUS, GE Healthcare) at Harbin Medical University Cancer Hospital, Harbin, China. All annotations were created and verified by an experienced radiologist.
+
+### Technical Specifications
+- **Image Dimensions**: Varying between 843×546×270 and 865×682×354
+- **Pixel Spacing**: 
+  - X-Y plane: 0.200 mm × 0.073 mm
+  - Z-axis (between slices): ~0.475674 mm
+- **File Format**: .nrrd
+- **Annotations**: Voxel-level segmentation
+  - 0: Background
+  - 1: Tumor
+
+### Dataset Split
+The dataset is stratified sampled from all 200 cases and divided into:
+
+- **Training Set**: 100 cases
+  - Used for training robust models
+- **Validation Set**: 30 cases
+  - Open validation set for algorithm verification
+  - Sized to prevent test set distribution leakage
+- **Test Set**: 70 cases
+  - Closed set for final leaderboard evaluation
+  - Ensures fair comparison between methods
 
 ## Installation
 
@@ -20,17 +39,33 @@ pip install tdsc-abus2023-pytorch
 ## Usage
 
 ```python
-from tdsc_abus2023 import dataloader
+from tdsc-abus2023-pytorch import TDSC, DataSplits
 
-dataset = TDSCABUS2023Dataset(root_dir='path/to/dataset')
+# Initialize dataset with automatic download
+dataset = TDSC(
+    path="./data",
+    split=DataSplits.TRAIN,
+    download=True
+)
+
+# Access a sample
+volume, mask, label = dataset[0]
 ```
 
-## Dataset Structure
-
-The dataset contains volumetric data organized as follows:
-- Training set: 100 volumes
-- Validation set: 30 volumes
-- Test set: 70 volumes
+## Data Structure
+```
+data/
+└── tdsc/
+    ├── Train/
+    │   ├── DATA/
+    │   └── MASK/
+    ├── Validation/
+    │   ├── DATA/
+    │   └── MASK/
+    └── Test/
+        ├── DATA/
+        └── MASK/
+```
 
 ## Citation
 

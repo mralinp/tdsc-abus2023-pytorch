@@ -16,7 +16,7 @@ class DatasetDownloader:
         return response.json()
 
     @classmethod
-    def download_dataset(cls, split, base_path=None):
+    def download_dataset(cls, split: str, base_path=None):
         """
         Download dataset files for a specific split, unzip them, and remove the zip file.
         

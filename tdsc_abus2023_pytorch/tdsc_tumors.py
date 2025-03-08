@@ -1,61 +1,88 @@
+import os
 import pandas as pd
+from typing import Tuple, List, Callable, Optional, Any
+import numpy as np
 
-from tdsc import TDSC
+from .tdsc import TDSC
+from .enums import DataSplits
 
 
 class TDSCTumors(TDSC):
     """
-    A class for the TDSC-ABUS2023 tumors dataset.
+    A specialized class for the TDSC-ABUS2023 tumors dataset that handles
+    bounding box information and tumor region extraction.
     """
-    def __init__(self, path: str = "./data/tdsc", split: TDSC.DataSplits = TDSC.DataSplits.TRAIN, transforms: list = None):
+    def __init__(
+        self,
+        path: str = "./data",
+        split: DataSplits | str = DataSplits.TRAIN,
+        transforms: Optional[List[Callable]] = None,
+        download: bool = False
+    ):
         """
-        Initialize the TDSCTumors dataset.
+        Initialize TDSCTumors dataset.
 
         Args:
-            path (str): The path to the dataset.
-            split (TDSC.DataSplits): The split to use (Train, Validation, Test).
-            transforms (list): A list of transforms to apply to the data.
+            path: Base path for dataset storage
+            split: Dataset split to use
+            transforms: List of transformations to apply
+            download: Whether to download the dataset if not found
         """
-        super().__init__(path, split, transforms)
-        self.bbx_metadata = pd.read_csv(f"{self.path}/{self.split}/bbx_labels.csv", dtype={
-            'id': int, 
-            'c_x': float, 
-            'c_y': float, 
-            'c_z': float, 
-            'len_x': float,
-            'len_y': float,
-            'len_z': float,}, index_col='id')
+        super(TDSCTumors, self).__init__(path, split, transforms, download)
 
-        
-    def __getitem__(self, index):
+    def _extract_tumor_region(
+        self,
+        volume: np.ndarray,
+        bbox_data: pd.Series
+    ) -> Tuple[np.ndarray, Tuple[Tuple[int, int, int], Tuple[int, int, int]]]:
         """
-        Get an item from the dataset.
+        Extract tumor region from volume using bounding box coordinates.
 
         Args:
-            index (int): The index of the item to get.
+            volume: Input volume data
+            bbox_data: Bounding box parameters
 
         Returns:
-            tuple(ndarray, ndarray, int): A tuple of the volume, mask, and label.
+            Tuple of (extracted_volume, ((start_x, start_y, start_z), (end_x, end_y, end_z)))
         """
-        x, m, y = super().__getitem__(index)
-        c_x, c_y, c_z, len_x, len_y, len_z = self.bbx_metadata.iloc[index]
+        # Calculate slice indices
+        z_start = int(bbox_data['c_z'] - bbox_data['len_z']/2)
+        z_end = int(bbox_data['c_z'] + bbox_data['len_z']/2)
+        
+        y_start = int(bbox_data['c_y'] - bbox_data['len_y']/2)
+        y_end = int(bbox_data['c_y'] + bbox_data['len_y']/2)
+        
+        x_start = int(bbox_data['c_x'] - bbox_data['len_x']/2)
+        x_end = int(bbox_data['c_x'] + bbox_data['len_x']/2)
 
-        z_s = int(c_z-len_z/2)
-        z_e = int(c_z+len_z/2)
+        # Extract region (z, y, x order)
+        extracted_volume = volume[z_start:z_end, y_start:y_end, x_start:x_end]
+        bbox_coords = ((x_start, y_start, z_start), (x_end, y_end, z_end))
+        
+        return extracted_volume, bbox_coords
 
-        y_s = int(c_y-len_y/2)
-        y_e = int(c_y+len_y/2)
+    def __getitem__(self, index: int) -> Tuple[np.ndarray, np.ndarray, int]:
+        """
+        Get a dataset item by index.
 
-        x_s = int(c_x-len_x/2)
-        x_e = int(c_x+len_x/2)
+        Args:
+            index: Index of the item to get
 
-        # z, y, x
-        x = x[z_s:z_e, y_s:y_e, x_s:x_e]
-        m = m[z_s:z_e, y_s:y_e, x_s:x_e]
-                
-        # apply transformers if needed
-        if self.transforms:
-            for transform in self.transforms:
-                x, m = transform(x,m)
-                
-        return x, m, y
+        Returns:
+            Tuple containing (volume, mask, label), where volume and mask are 
+            cropped to the tumor region
+        """
+        # Get base data from parent class
+        volume, mask, label = super().__getitem__(index)
+        
+        # Get bounding box data
+        bbox_data = self.bbx_metadata.iloc[index]
+        
+        # Extract tumor regions
+        volume, _ = self._extract_tumor_region(volume, bbox_data)
+        mask, _ = self._extract_tumor_region(mask, bbox_data)
+        
+        # Apply transforms if any
+        volume, mask = self._apply_transforms(volume, mask)
+        
+        return volume, mask, label

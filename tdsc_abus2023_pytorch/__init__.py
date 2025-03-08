@@ -1,12 +1,8 @@
-from enum import Enum
+from .enums import DataSplits
+from .tdsc import TDSC
+from .tdsc_tumors import TDSCTumors
 
-class DataSplits(str, Enum):
-    TRAIN = "Train"
-    VALIDATION = "Validation"
-    TEST = "Test"
-
-    def __str__(self):
-        return self.value
+__all__ = ['TDSC', 'TDSCTumors', 'DataSplits']
 
 # Remove or fix the problematic import
 # from tdsc_tumors import TDSCTumors  # This was causing the error

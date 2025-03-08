@@ -5,7 +5,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setup(
     name="tdsc-abus2023-pytorch",
-    version="0.1.4",
+    version="0.1.5",
     author="Ali Naderi Parizi",
     author_email="me@alinaderiparizi.com",
     description="PyTorch dataset for TDSC ABUS 2023",

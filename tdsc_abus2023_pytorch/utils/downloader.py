@@ -3,9 +3,10 @@ import json
 import requests
 from pathlib import Path
 import gdown
+from zipfile import ZipFile
 
 class DatasetDownloader:
-    GITHUB_RAW_URL = "https://raw.githubusercontent.com/mralinp/tdsc-abus2023-pytorch/main/tdsc-abus2023-pytorch/resources/gdrive_files.json"
+    GITHUB_RAW_URL = "https://raw.githubusercontent.com/mralinp/tdsc-abus2023-pytorch/main/tdsc_abus2023_pytorch/resources/gdrive_files.json"
 
     @classmethod
     def get_file_ids(cls):
@@ -17,7 +18,7 @@ class DatasetDownloader:
     @classmethod
     def download_dataset(cls, split, base_path=None):
         """
-        Download dataset files for a specific split.
+        Download dataset files for a specific split, unzip them, and remove the zip file.
         
         Args:
             split (DataSplits): The dataset split to download
@@ -26,19 +27,34 @@ class DatasetDownloader:
         if base_path is None:
             base_path = os.path.join(os.getcwd(), "data")
 
-        file_ids = cls.get_file_ids()
-        split_data = file_ids[split]
+        # Construct the output paths
+        output_filename = f"{split}.zip"
+        output_path = os.path.join(base_path, output_filename)
+        split_path = os.path.join(base_path, str(split))
+        
+        # If the dataset folder already exists, skip everything
+        if os.path.exists(split_path):
+            print(f"Dataset already exists in: {split_path}")
+            return
 
-        for data_type, info in split_data.items():
-            output_path = os.path.join(base_path, info["path"])
-            os.makedirs(os.path.dirname(output_path), exist_ok=True)
+        os.makedirs(base_path, exist_ok=True)
 
-            if not os.path.exists(output_path):
-                print(f"Downloading {split} {data_type}...")
-                url = f"https://drive.google.com/uc?id={info['gdrive_id']}"
-                gdown.download(url, output_path, quiet=False)
-            else:
-                print(f"File already exists: {output_path}")
+        # If zip doesn't exist, download it
+        if not os.path.exists(output_path):
+            print(f"Downloading {split} dataset...")
+            file_ids = cls.get_file_ids()
+            gdrive_id = file_ids[split]
+            url = f"https://drive.google.com/uc?id={gdrive_id}"
+            gdown.download(url, output_path, quiet=False)
+        else:
+            print(f"Zip file already exists: {output_path}")
+        
+        print(f"Extracting {output_filename}...")
+        with ZipFile(output_path, 'r') as zip_ref:
+            zip_ref.extractall(base_path)
+        
+        print(f"Removing {output_filename}...")
+        os.remove(output_path)
 
     @classmethod
     def download_all(cls, base_path=None):

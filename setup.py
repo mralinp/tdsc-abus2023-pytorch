@@ -4,7 +4,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
     long_description = fh.read()
 
 setup(
-    name="tdsc_abus2023_pytorch",
+    name="tdsc-abus2023-pytorch",
     version="0.1.0",
     author="Ali Naderi Parizi",
     author_email="me@alinaderiparizi.com",
@@ -12,7 +12,7 @@ setup(
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/mralinp/tdsc-abus2023-pytorch",
-    packages=find_packages(),
+    packages=find_packages(exclude=["tests", "tests.*"]),
     classifiers=[
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License",
@@ -20,11 +20,10 @@ setup(
     ],
     python_requires=">=3.7",
     install_requires=[
-        "torch>=1.7.0",
-        "numpy>=1.19.0",
-        "pandas>=1.2.0",
-        "pynrrd>=0.4.2",
-        "gdown>=4.4.0",
-        
+        "torch",
+        "numpy",
+        "pandas",
+        "pynrrd",
+        "gdown",
     ],
 ) 

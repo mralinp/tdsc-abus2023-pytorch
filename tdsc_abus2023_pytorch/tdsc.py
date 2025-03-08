@@ -5,7 +5,7 @@ import pandas as pd
 from typing import Tuple, List, Callable, Optional, Any
 
 from .enums import DataSplits
-from .utils.downloader import DatasetDownloader
+from .utils import DatasetDownloader
 
 class TDSC(torch.utils.data.Dataset):
     """Base class for TDSC dataset handling volumetric medical data."""

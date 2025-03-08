@@ -1,6 +1,6 @@
 import pytest
 from unittest.mock import patch, MagicMock
-from tdsc_abus2023_pytorch.utils.downloader import DatasetDownloader
+from tdsc_abus2023_pytorch.utils import DatasetDownloader
 from tdsc_abus2023_pytorch import DataSplits
 import os
 

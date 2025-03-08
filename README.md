@@ -85,4 +85,10 @@ If you use this dataset in your research, please cite:
 
 ## Contributing
 
+### Build from source
+
+```bash
+python setup.py sdist bdist_wheel
+```
+
 Contributions are welcome! Please feel free to submit a Pull Request.

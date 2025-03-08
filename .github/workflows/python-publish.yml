@@ -10,8 +10,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  id-token: write  # ✅ Required for Trusted Publishing
-  contents: read  
+  contents: read  # ✅ No need for id-token permissions since we use API token
 
 jobs:
   release-build:
@@ -27,8 +26,8 @@ jobs:
       - name: Build release distributions
         run: |
           python -m pip install --upgrade pip
-          python -m pip install build
-          python -m build
+          pip install setuptools wheel twine
+          python setup.py sdist bdist_wheel
 
       - name: Upload distributions
         uses: actions/upload-artifact@v4
@@ -41,11 +40,7 @@ jobs:
     needs:
       - release-build
     permissions:
-      id-token: write  # ✅ Required for Trusted Publishing
-
-    environment:
-      name: pypi
-      url: https://pypi.org/p/tdsc-abus2023-pytorch
+      contents: read  # ✅ No id-token required
 
     steps:
       - name: Retrieve release distributions
@@ -54,5 +49,11 @@ jobs:
           name: release-dists
           path: dist/
 
+      - name: Install twine
+        run: pip install twine
+
       - name: Publish to PyPI
-        uses: pypa/gh-action-pypi-publish@release/v1
+        env:
+          TWINE_USERNAME: __token__
+          TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}  # ✅ Uses API token from GitHub Secrets
+        run: twine upload dist/*

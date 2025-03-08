@@ -1,42 +1,54 @@
 # TDSC-ABUS2023 PyTorch Dataset
 
-A PyTorch-compatible dataset package containing volumetric data from the TDSC-ABUS2023 collection (Tumor Detection, Segmentation and Classification Challenge on Automated 3D Breast Ultrasound).
+[![PyPI version](https://img.shields.io/pypi/v/tdsc-abus2023-pytorch)](https://pypi.org/project/tdsc-abus2023-pytorch/)  
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)  
+[![Build Status](https://img.shields.io/github/actions/workflow/status/your-repo/ci.yml?branch=main)](https://github.com/your-repo/actions)
+
+A PyTorch-compatible dataset package containing volumetric data from the **TDSC-ABUS2023** collection (**Tumor Detection, Segmentation, and Classification Challenge on Automated 3D Breast Ultrasound**).
 
 ## Dataset Description
 
-The dataset contains 200 3D volumes with refined tumor labels, collected using an Automated 3D Breast Ultrasound (ABUS) system (Invenia ABUS, GE Healthcare) at Harbin Medical University Cancer Hospital, Harbin, China. All annotations were created and verified by an experienced radiologist.
+The dataset consists of **200 3D ultrasound volumes** collected using an **Invenia ABUS (GE Healthcare)** system at **Harbin Medical University Cancer Hospital, China**.  
+All tumor annotations were created and verified by experienced radiologists.
 
-### Technical Specifications
-- **Image Dimensions**: Varying between 843×546×270 and 865×682×354
-- **Pixel Spacing**: 
-  - X-Y plane: 0.200 mm × 0.073 mm
-  - Z-axis (between slices): ~0.475674 mm
-- **File Format**: .nrrd
-- **Annotations**: Voxel-level segmentation
-  - 0: Background
-  - 1: Tumor
+### 📊 Dataset Composition
 
-### Dataset Split
-The dataset is stratified sampled from all 200 cases and divided into:
+| **Set**       | **Cases** | **Malignant** | **Benign** |
+|--------------|----------|--------------|------------|
+| **Training**  | 100      | 58           | 42         |
+| **Validation**| 30       | 17           | 13         |
+| **Test**      | 70       | 40           | 30         |
 
-- **Training Set**: 100 cases
-  - Used for training robust models
-- **Validation Set**: 30 cases
-  - Open validation set for algorithm verification
-  - Sized to prevent test set distribution leakage
-- **Test Set**: 70 cases
-  - Closed set for final leaderboard evaluation
-  - Ensures fair comparison between methods
+### 📌 Technical Specifications
+- **Image Dimensions**: Varying between **843×546×270** and **865×682×354**  
+- **Pixel Spacing**:
+  - X-Y plane: **0.200 mm × 0.073 mm**
+  - Z-axis (between slices): **~0.475674 mm**
+- **File Format**: `.nrrd`
+- **Annotations**: **Voxel-level segmentation**
+  - `0`: Background
+  - `1`: Tumor  
 
-## Installation
+---
 
-You can install this package via pip:
+## 📥 Installation
+
+Install the package via pip:
 
 ```bash
 pip install tdsc-abus2023-pytorch
 ```
 
-## Usage
+### Verify Installation
+
+```python
+import tdsc_abus2023_pytorch
+print("TDSC-ABUS2023 PyTorch Dataset is installed successfully!")
+```
+
+---
+
+## 🚀 Usage
 
 ```python
 from tdsc_abus2023_pytorch import TDSC, TDSCTumors, DataSplits
@@ -51,8 +63,9 @@ dataset = TDSC(
 # Access a sample
 volume, mask, label, bbx = dataset[0]
 ```
+---
 
-## Data Structure
+## 📂 Data Structure
 ```
 data/
   ├── Train/
@@ -66,22 +79,27 @@ data/
       └── MASK/
 ```
 
-## Citation
+---
+
+## 📖 Citation
 
 If you use this dataset in your research, please cite:
 
 ```bibtex
 @misc{luo2025tumordetectionsegmentationclassification,
-    title={Tumor Detection, Segmentation and Classification Challenge on Automated 3D Breast Ultrasound: The TDSC-ABUS Challenge}, 
-    author={Gongning Luo and Mingwang Xu and Hongyu Chen and Xinjie Liang and Xing Tao and Dong Ni and Hyunsu Jeong and Chulhong Kim and Raphael Stock and Michael Baumgartner and Yannick Kirchhoff and Maximilian Rokuss and Klaus Maier-Hein and Zhikai Yang and Tianyu Fan and Nicolas Boutry and Dmitry Tereshchenko and Arthur Moine and Maximilien Charmetant and Jan Sauer and Hao Du and Xiang-Hui Bai and Vipul Pai Raikar and Ricardo Montoya-del-Angel and Robert Marti and Miguel Luna and Dongmin Lee and Abdul Qayyum and Moona Mazher and Qihui Guo and Changyan Wang and Navchetan Awasthi and Qiaochu Zhao and Wei Wang and Kuanquan Wang and Qiucheng Wang and Suyu Dong},
+    title={Tumor Detection, Segmentation and Classification Challenge on Automated 3D Breast Ultrasound: The TDSC-ABUS Challenge},
+    author={Gongning Luo and others},
     year={2025},
     eprint={2501.15588},
     archivePrefix={arXiv},
     primaryClass={eess.IV},
-    url={https://arxiv.org/abs/2501.15588}, 
+    url={https://arxiv.org/abs/2501.15588},
 }
 ```
 
-## Contributing
+---
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+## 🤝 Contributing
+
+We welcome contributions!  
+To contribute, please **fork the repository**, make your changes, and submit a **Pull Request**.

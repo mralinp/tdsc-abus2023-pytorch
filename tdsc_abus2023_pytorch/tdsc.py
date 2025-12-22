@@ -10,10 +10,12 @@ from .utils import DatasetDownloader
 class TDSC(torch.utils.data.Dataset):
     """Base class for TDSC dataset handling volumetric medical data."""
 
-    class_names = {
-        0: 'Malignant',  # 'M' in the dataset
-        1: 'Benign'      # 'B' in the dataset
-    }
+    @property
+    def class_names(self) -> dict[int, str]:
+        return {
+            0: 'Malignant',  # 'M' in the dataset
+            1: 'Benign'      # 'B' in the dataset
+        }
 
     def __init__(
         self, 

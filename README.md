@@ -14,21 +14,22 @@ The dataset consists of **200 3D ultrasound volumes** collected using an **Inven
 
 ### Dataset Composition
 
-| **Set**       | **Cases** | **Malignant** | **Benign** |
-|--------------|----------|--------------|------------|
-| **Training**  | 100      | 58           | 42         |
-| **Validation**| 30       | 17           | 13         |
-| **Test**      | 70       | 40           | 30         |
+| **Set**        | **Cases** | **Malignant** | **Benign** |
+| -------------- | --------- | ------------- | ---------- |
+| **Training**   | 100       | 58            | 42         |
+| **Validation** | 30        | 17            | 13         |
+| **Test**       | 70        | 40            | 30         |
 
 ### Technical Specifications
-- **Image Dimensions**: Vary between **843×546×270** and **865×682×354**  
+
+- **Image Dimensions**: Vary between **843×546×270** and **865×682×354**
 - **Pixel Spacing**:
   - X-Y plane: **0.200 mm × 0.073 mm**
   - Z-axis (between slices): **~0.475674 mm**
 - **File Format**: `.nrrd`
 - **Annotations**: **Voxel-level segmentation**
   - `0`: Background
-  - `1`: Tumor  
+  - `1`: Tumor
 
 ---
 
@@ -85,38 +86,50 @@ dataset = TDSCTumors(
 volume, mask, label = dataset[0]
 ```
 
-### Data Transformers for Preprocessing
+### View Transformers for changing the view
 
 ```python
-from tdsc_abus2023_pytorch import TDSC, DataSplits
+from tdsc_abus2023_pytorch import TDSC, DataSplits, ViewTransformer, ViewTransposeConfig
 from enum import Enum
 import numpy as np
 
-class ViewTransformer:
-    class View(Enum):
-        CORONAL = 0
-        SAGITTAL = 1
-        AXIAL = 2
-    
-    TRANSPOSE_CONFIGS = {
-        View.AXIAL: (0, 1, 2),
-        View.CORONAL: (1, 2, 0),
-        View.SAGITTAL: (2, 0, 1)
-    }
-    
-    def __init__(self, view: View):
-        self.transpose_axes = self.TRANSPOSE_CONFIGS[view]
-    
-    def __call__(self, vol: np.ndarray, mask: np.ndarray):
-        transformed_vol = np.transpose(vol, self.transpose_axes)
-        transformed_mask = np.transpose(mask, self.transpose_axes)
-        return transformed_vol, transformed_mask
-
-view_transformer = ViewTransformer(view=ViewTransformer.View.AXIAL)
+view_transformer = ViewTransformer(view=ViewTransposeConfig.CORONAL)
 dataset = TDSC(path="./data", split=DataSplits.TRAIN, transforms=[view_transformer])
 
 # Get transformed sample
 vol, msk, label, bbx = dataset[0]
+```
+
+### Custom Transformers
+
+```python
+
+from tdsc_abus2023_pytorch import TDSC, DataSplits, ViewTransformer, ViewTransposeConfig
+from enum import Enum
+import numpy as np
+
+class MyTransformer:
+    def __init__(self, my_params):
+        # your params work here...
+        pass
+
+    def transform(self, vol):
+        # Your transform strategy here...
+        pass
+
+    def __call__(self, vol, mask):
+        # you should return vol & mask after transform
+        return transform(vol), transform(mask)
+
+view_transformer = ViewTransformer(view=ViewTransposeConfig.CORONAL)
+my_transformer = MyTransformer(*args)
+
+
+dataset = TDSC(path="./data", split=DataSplits.TRAIN, transforms=[view_transformer, my_transformer])
+
+# Get transformed sample
+vol, msk, label, bbx = dataset[0]
+
 ```
 
 ---

@@ -1,157 +1,147 @@
 # TDSC-ABUS2023 PyTorch Dataset
 
 [![PyPI version](https://img.shields.io/pypi/v/tdsc-abus2023-pytorch)](https://pypi.org/project/tdsc-abus2023-pytorch/)
-[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![Python](https://img.shields.io/badge/python-3.9%2B-blue)](https://www.python.org/)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Build Status](https://img.shields.io/github/actions/workflow/status/mralinp/tdsc-abus2023-pytorch/python-publish.yml?branch=main)](https://github.com/mralinp/tdsc-abus2023-pytorch/actions)
 
-A PyTorch-compatible dataset package containing volumetric data from the **TDSC-ABUS2023** collection (**Tumor Detection, Segmentation, and Classification Challenge on Automated 3D Breast Ultrasound**).
+A lightweight PyTorch `Dataset` for the **TDSC-ABUS2023** challenge (Tumor Detection, Segmentation, and Classification on Automated 3D Breast Ultrasound). It downloads the data on first use and hands back ready-to-train volumes, masks, labels, and tumor bounding boxes — no manual file wrangling required.
 
----
+```python
+from tdsc_abus2023_pytorch import TDSC, DataSplits
 
-## 📊 Dataset Description
+dataset = TDSC(path="./data", split=DataSplits.TRAIN, download=True)
+volume, mask, label, bbox = dataset[0]
+```
 
-The dataset consists of **200 3D ultrasound volumes** collected using an **Invenia ABUS (GE Healthcare)** system at **Harbin Medical University Cancer Hospital, China**. All tumor annotations were created and verified by experienced radiologists.
+![Sample case: full axial slice with tumor bounding box and mask contour, next to the cropped tumor region returned by TDSCTumors](assets/sample_case.png)
 
-### Dataset Composition
+## Contents
 
-| **Set**        | **Cases** | **Malignant** | **Benign** |
-| -------------- | --------- | ------------- | ---------- |
-| **Training**   | 100       | 58            | 42         |
-| **Validation** | 30        | 17            | 13         |
-| **Test**       | 70        | 40            | 30         |
+- [Installation](#installation)
+- [Quick Start](#quick-start)
+- [Dataset](#dataset)
+- [API Reference](#api-reference)
+- [On-Disk Layout](#on-disk-layout)
+- [Development](#development)
+- [Citation](#citation)
+- [License](#license)
 
-### Technical Specifications
-
-- **Image Dimensions**: Vary between **843×546×270** and **865×682×354**
-- **Pixel Spacing**:
-  - X-Y plane: **0.200 mm × 0.073 mm**
-  - Z-axis (between slices): **~0.475674 mm**
-- **File Format**: `.nrrd`
-- **Annotations**: **Voxel-level segmentation**
-  - `0`: Background
-  - `1`: Tumor
-
----
-
-## 📥 Installation
-
-Install the package via pip:
+## Installation
 
 ```bash
 pip install tdsc-abus2023-pytorch
 ```
 
-### Verify Installation
+Requires **Python 3.9+**. The only runtime dependencies are `torch`, `numpy`, `pandas`, `pynrrd`, and `gdown` — nothing else is pulled in.
 
-```python
-import tdsc_abus2023_pytorch
-print("TDSC-ABUS2023 PyTorch Dataset is installed successfully!")
-```
+## Quick Start
 
----
-
-## 🚀 Usage
-
-### Loading the Original Dataset
+### Full volumes
 
 ```python
 from tdsc_abus2023_pytorch import TDSC, DataSplits
 
-# Initialize dataset with automatic download
-dataset = TDSC(
-    path="./data",
-    split=DataSplits.TRAIN,
-    download=True
-)
-
-# Access a sample
-volume, mask, label, bbx = dataset[0]
+dataset = TDSC(path="./data", split=DataSplits.TRAIN, download=True)
+volume, mask, label, bbox = dataset[0]
+# volume, mask : np.ndarray            — full 3D ultrasound volume / segmentation mask
+# label        : int                   — 0 = Malignant, 1 = Benign
+# bbox         : ((x0, y0, z0), (x1, y1, z1)) — tumor bounding box, in the volume's native coordinates
 ```
 
-### Using the Tumor-Only Dataset
+### Tumor crops only
 
-This dataset contains only tumor data, suitable for classification and segmentation tasks.
+`TDSCTumors` returns the volume and mask already cropped to the tumor's bounding box — handy for classification or patch-based segmentation.
 
 ```python
 from tdsc_abus2023_pytorch import TDSCTumors, DataSplits
 
-# Initialize dataset with automatic download
-dataset = TDSCTumors(
-    path="./data",
-    split=DataSplits.TRAIN,
-    download=True
-)
-
-# Access a sample
+dataset = TDSCTumors(path="./data", split=DataSplits.TRAIN, download=True)
 volume, mask, label = dataset[0]
 ```
 
-### View Transformers for changing the view
+### Changing the anatomical view
+
+`ViewTransformer` transposes each volume/mask pair into a different anatomical plane before it's returned.
 
 ```python
 from tdsc_abus2023_pytorch import TDSC, DataSplits, ViewTransformer, ViewTransposeConfig
-from enum import Enum
-import numpy as np
 
-view_transformer = ViewTransformer(view=ViewTransposeConfig.CORONAL)
-dataset = TDSC(path="./data", split=DataSplits.TRAIN, transforms=[view_transformer])
-
-# Get transformed sample
-vol, msk, label, bbx = dataset[0]
+transformer = ViewTransformer(view=ViewTransposeConfig.CORONAL)
+dataset = TDSC(path="./data", split=DataSplits.TRAIN, transforms=[transformer])
+volume, mask, label, bbox = dataset[0]
 ```
 
-### Custom Transformers
+![Axial, coronal, and sagittal views of the same volume produced by ViewTransformer](assets/views.png)
+
+### Custom transforms
+
+Any callable of the form `(volume, mask) -> (volume, mask)` can be used as a transform. Pass several to `transforms=[...]` and they run in order.
 
 ```python
+class MyTransform:
+    def __call__(self, volume, mask):
+        return volume, mask  # your logic here
 
-from tdsc_abus2023_pytorch import TDSC, DataSplits, ViewTransformer, ViewTransposeConfig
-from enum import Enum
-import numpy as np
-
-class MyTransformer:
-    def __init__(self, my_params):
-        # your params work here...
-        pass
-
-    def transform(self, vol):
-        # Your transform strategy here...
-        pass
-
-    def __call__(self, vol, mask):
-        # you should return vol & mask after transform
-        return transform(vol), transform(mask)
-
-view_transformer = ViewTransformer(view=ViewTransposeConfig.CORONAL)
-my_transformer = MyTransformer(*args)
-
-
-dataset = TDSC(path="./data", split=DataSplits.TRAIN, transforms=[view_transformer, my_transformer])
-
-# Get transformed sample
-vol, msk, label, bbx = dataset[0]
-
+dataset = TDSC(path="./data", split=DataSplits.TRAIN, transforms=[ViewTransformer(ViewTransposeConfig.AXIAL), MyTransform()])
 ```
 
----
+## Dataset
 
-## 📂 Data Structure
+200 3D breast ultrasound volumes acquired with an **Invenia ABUS (GE Healthcare)** system at Harbin Medical University Cancer Hospital, China. Tumor segmentation masks and bounding boxes were created and verified by experienced radiologists.
+
+| Split          | Cases | Malignant | Benign |
+| -------------- | ----- | --------- | ------ |
+| Train          | 100   | 58        | 42     |
+| Validation     | 30    | 17        | 13     |
+| Test           | 70    | 40        | 30     |
+
+- **Volume size**: varies between 843×546×270 and 865×682×354 voxels
+- **Voxel spacing**: 0.200 mm × 0.073 mm (X–Y) × ~0.475674 mm (Z)
+- **File format**: `.nrrd`
+- **Mask labels**: `0` background, `1` tumor
+
+On first use (`download=True`), each requested split is fetched from Google Drive, extracted, and cached at `path/<Split>/`; subsequent runs reuse the cached copy without touching the network.
+
+## API Reference
+
+| Class                             | Returns                                    | Notes                                   |
+| ---------------------------------- | ------------------------------------------- | ---------------------------------------- |
+| `TDSC(path, split, transforms, download)` | `(volume, mask, label, bbox)`       | Full volume and mask                    |
+| `TDSCTumors(path, split, transforms, download)` | `(volume, mask, label)`       | Cropped to the tumor bounding box        |
+| `ViewTransformer(view)`            | `(volume, mask)`                            | `view` is `ViewTransposeConfig.{AXIAL, CORONAL, SAGITTAL}` |
+| `DataSplits`                       | —                                            | `DataSplits.{TRAIN, VALIDATION, TEST}`   |
+
+All datasets accept a plain string instead of the enum (e.g. `split="Train"`).
+
+## On-Disk Layout
 
 ```
 data/
-  ├── Train/
-  │   ├── DATA/
-  │   └── MASK/
-  ├── Validation/
-  │   ├── DATA/
-  │   └── MASK/
-  └── Test/
-      ├── DATA/
-      └── MASK/
+├── Train/
+│   ├── DATA/
+│   ├── MASK/
+│   ├── labels.csv
+│   └── bbx_labels.csv
+├── Validation/
+│   └── ...
+└── Test/
+    └── ...
 ```
 
----
+## Development
 
-## 📖 Citation
+```bash
+git clone https://github.com/mralinp/tdsc-abus2023-pytorch.git
+cd tdsc-abus2023-pytorch
+pip install -r requirements.txt
+pip install pytest pytest-cov
+pytest
+```
+
+The test suite runs entirely offline against a small synthetic dataset — it never downloads the real data.
+
+## Citation
 
 If you use this dataset in your research, please cite:
 
@@ -167,8 +157,8 @@ If you use this dataset in your research, please cite:
 }
 ```
 
----
+## License
 
-## 🤝 Contributing
+Released under the [MIT License](LICENSE).
 
-We welcome contributions! To contribute, please **fork the repository**, make your changes, and submit a **Pull Request**.
+Contributions are welcome — fork the repository, make your changes, and open a pull request.

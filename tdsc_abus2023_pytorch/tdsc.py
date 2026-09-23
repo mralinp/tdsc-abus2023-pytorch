@@ -3,6 +3,7 @@ from __future__ import annotations
 import os
 import torch
 import nrrd
+import numpy as np
 import pandas as pd
 from typing import Tuple, List, Callable, Optional, Any
 
@@ -25,7 +26,8 @@ class TDSC(torch.utils.data.Dataset):
         path: str = "./data",
         split: DataSplits | str = DataSplits.TRAIN,
         transforms: Optional[List[Callable]] = None,
-        download: bool = False
+        download: bool = False,
+        cache: bool = False
     ):
         """
         Initialize TDSC dataset.
@@ -35,8 +37,13 @@ class TDSC(torch.utils.data.Dataset):
             split: Dataset split to use
             transforms: List of transformations to apply
             download: Whether to download the dataset if not found
+            cache: Convert each gzip NRRD to an uncompressed .npy next to it on
+                first access and memory-map it afterwards. Skips decompression on
+                every read and lets crops read only the bytes they need, at the
+                cost of roughly 1.5x the disk space.
         """
         self.path = path
+        self.cache = cache
         self.split = split if isinstance(split, DataSplits) else DataSplits(split)
         self.transforms = transforms or []
         self.do_transform = True
@@ -97,8 +104,20 @@ class TDSC(torch.utils.data.Dataset):
     def _load_volume(self, path: str) -> Any:
         """Load a volume file from disk."""
         full_path = os.path.join(self.path, str(self.split), path.replace('\\', '/'))
-        volume, _ = nrrd.read(full_path)
-        return volume
+        if not self.cache:
+            volume, _ = nrrd.read(full_path)
+            return volume
+
+        npy_path = os.path.splitext(full_path)[0] + ".npy"
+        if not os.path.exists(npy_path):
+            volume, _ = nrrd.read(full_path)
+            # Write-then-rename so DataLoader workers racing on the same file never
+            # see a half-written cache entry.
+            tmp_path = f"{npy_path}.{os.getpid()}.tmp"
+            with open(tmp_path, "wb") as f:
+                np.save(f, volume)
+            os.replace(tmp_path, npy_path)
+        return np.load(npy_path, mmap_mode="r")
 
     def _apply_transforms(self, volume: Any, mask: Any) -> Tuple[Any, Any]:
         """Apply transformations to volume and mask."""
@@ -147,6 +166,9 @@ class TDSC(torch.utils.data.Dataset):
             Tuple containing (volume, mask, label, bbox), where bbox is ((start_x, start_y, start_z), (end_x, end_y, end_z))
         """
         volume, mask, label, bbox = self._get_raw_item(index)
+        if self.cache:
+            # Pull memmaps into RAM so transforms and collate get plain, writable arrays.
+            volume, mask = np.array(volume), np.array(mask)
         volume, mask = self._apply_transforms(volume, mask)
         label = 0 if label == 'M' else 1
         return volume, mask, label, bbox

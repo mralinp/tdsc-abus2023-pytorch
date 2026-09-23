@@ -18,7 +18,8 @@ class TDSCTumors(TDSC):
         path: str = "./data",
         split: DataSplits | str = DataSplits.TRAIN,
         transforms: Optional[List[Callable]] = None,
-        download: bool = False
+        download: bool = False,
+        cache: bool = False
     ):
         """
         Initialize TDSCTumors dataset.
@@ -28,8 +29,9 @@ class TDSCTumors(TDSC):
             split: Dataset split to use
             transforms: List of transformations to apply
             download: Whether to download the dataset if not found
+            cache: See TDSC. With the cache, only the tumor region is read from disk.
         """
-        super(TDSCTumors, self).__init__(path, split, transforms, download)
+        super(TDSCTumors, self).__init__(path, split, transforms, download, cache)
 
     def _extract_tumor_region(
         self,
@@ -80,8 +82,9 @@ class TDSCTumors(TDSC):
 
         bbox_data = self.bbx_metadata.iloc[index]
 
-        volume, _ = self._extract_tumor_region(volume, bbox_data)
-        mask, _ = self._extract_tumor_region(mask, bbox_data)
+        # Copy the crops so the full volumes (or their memmaps) can be released now.
+        volume = np.array(self._extract_tumor_region(volume, bbox_data)[0])
+        mask = np.array(self._extract_tumor_region(mask, bbox_data)[0])
 
         volume, mask = self._apply_transforms(volume, mask)
 

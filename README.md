@@ -70,6 +70,15 @@ dataset = TDSCTumors(path="./data", split=DataSplits.TRAIN, download=True)
 volume, mask, label = dataset[0]
 ```
 
+### Faster loading
+
+The volumes ship as gzip-compressed NRRD, so every read decompresses about 200 MB. Pass `cache=True` to convert each file to an uncompressed `.npy` next to it on first access. Later reads memory-map that file: `TDSC` skips decompression, and `TDSCTumors` reads only the tumor region. DataLoader workers share the OS page cache. The cache takes about 1.5x the disk space of the NRRD files.
+
+```python
+dataset = TDSCTumors(path="./data", split=DataSplits.TRAIN, cache=True)
+loader = torch.utils.data.DataLoader(dataset, batch_size=1, num_workers=4)
+```
+
 ### Anatomical views
 
 `ViewTransformer` transposes each volume/mask pair into the requested anatomical plane.

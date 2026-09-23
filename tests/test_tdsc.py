@@ -58,3 +58,17 @@ def test_tdsc_tumors_crops_before_applying_transform(dataset_dir, volume_data):
     cropped_volume, _, _ = dataset[0]
 
     np.testing.assert_array_equal(cropped_volume, expected)
+
+
+@pytest.mark.parametrize("cls", [TDSC, TDSCTumors])
+def test_cache_matches_uncached_and_writes_npy(dataset_dir, cls):
+    import os
+    expected = cls(path=dataset_dir)[0]
+    cached = cls(path=dataset_dir, cache=True)
+    for _ in range(2):  # first call builds the .npy, second reads it via mmap
+        got = cached[0]
+        for e, g in zip(expected[:2], got[:2]):
+            np.testing.assert_array_equal(g, e)
+            assert type(g) is np.ndarray and g.flags.writeable
+        assert got[2:] == expected[2:]
+    assert os.path.exists(os.path.join(dataset_dir, "Train", "DATA", "case1.npy"))

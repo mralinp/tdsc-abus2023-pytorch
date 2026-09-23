@@ -1,1 +1,3 @@
-include tdsc-abus2023-pytorch/resources/gdrive_files.json 
+include LICENSE
+include README.md
+include tdsc_abus2023_pytorch/resources/gdrive_files.json

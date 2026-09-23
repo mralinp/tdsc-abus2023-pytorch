@@ -5,7 +5,4 @@ from .view_transforms import ViewTransformer, ViewTransposeConfig
 
 __all__ = ['TDSC', 'TDSCTumors', 'DataSplits', 'ViewTransformer', 'ViewTransposeConfig']
 
-# Remove or fix the problematic import
-# from tdsc_tumors import TDSCTumors  # This was causing the error
-
-__version__ = "0.1.10"
+__version__ = "0.1.11"

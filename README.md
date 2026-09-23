@@ -14,7 +14,7 @@ dataset = TDSC(path="./data", split=DataSplits.TRAIN, download=True)
 volume, mask, label, bbox = dataset[0]
 ```
 
-![Sample case: full axial slice with tumor bounding box and mask contour, next to the cropped tumor region returned by TDSCTumors](assets/sample_case.png)
+![Sample case: full axial slice with tumor bounding box and mask overlay, next to the cropped tumor region returned by TDSCTumors](https://raw.githubusercontent.com/mralinp/tdsc-abus2023-pytorch/main/assets/sample_case.png)
 
 ## Contents
 
@@ -72,7 +72,7 @@ dataset = TDSC(path="./data", split=DataSplits.TRAIN, transforms=[transformer])
 volume, mask, label, bbox = dataset[0]
 ```
 
-![Axial, coronal, and sagittal views of the same volume produced by ViewTransformer](assets/views.png)
+![Axial, coronal, and sagittal views of the same tumor produced by ViewTransformer](https://raw.githubusercontent.com/mralinp/tdsc-abus2023-pytorch/main/assets/views.png)
 
 ### Custom transforms
 

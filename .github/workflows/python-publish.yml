@@ -29,6 +29,8 @@ jobs:
         run: |
           # NOTE: put your own distribution build steps here.
           python -m pip install build
+          # Pin README image URLs to this commit so each PyPI release keeps its own images
+          sed -i "s#tdsc-abus2023-pytorch/main/#tdsc-abus2023-pytorch/${GITHUB_SHA}/#g" README.md
           python -m build
 
       - name: Upload distributions

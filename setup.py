@@ -1,11 +1,16 @@
+import re
 from setuptools import setup, find_packages
 
 with open("README.md", "r", encoding="utf-8") as fh:
     long_description = fh.read()
 
+# Single source of truth: __version__ in the package (CI bumps it before publishing)
+with open("tdsc_abus2023_pytorch/__init__.py", encoding="utf-8") as fh:
+    version = re.search(r'__version__ = "([^"]+)"', fh.read()).group(1)
+
 setup(
     name="tdsc-abus2023-pytorch",
-    version="0.2.0",
+    version=version,
     author="Ali Naderi Parizi",
     author_email="me@alinaderiparizi.com",
     description="PyTorch dataset for TDSC ABUS 2023",
